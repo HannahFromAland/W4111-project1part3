@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{title}}
+{% endblock %}
+
+<!--REMEMBER TO ADD TO THE HEAD-->
+
+{% block table %}
+<table class="table-primary">
+    <thead>
+        <tr>
+        {% for h in table["header"] %}
+        <th scope="col">{{h}}</th>
+        {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for curr in table["data"] %}
+        <tr>
+        {% for k in curr %}
+            <td>{{k}}</td>
+        {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
