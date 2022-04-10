@@ -17,6 +17,7 @@ Read about it online.
 import os
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
+from markupsafe import escape
 from flask import Flask, request, render_template, g, redirect, Response
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -40,7 +41,7 @@ app = Flask(__name__, template_folder=tmpl_dir)
 
 # DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
 
-DATABASEURI = "postgresql://uni:password@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
+DATABASEURI = "postgresql://yh3416:5933@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
 
 
 #
@@ -140,7 +141,7 @@ def medal_page():
 def medal_page_sort(sort_criteria):
     header = {"National Olympic Committees (NOC)":"noc_name","Gold":"gold",
     "Sliver":"silver", "Bronze":"bronze"}
-    table = to_table(f"SELECT * FROM NOCs ORDER BY {sort_criteria} DESC",header)
+    table = to_table(f"SELECT * FROM NOCs ORDER BY {escape(sort_criteria)} DESC",header)
     return render_template("entity.html", title = "Medal Table",table=table)
 
 @app.route("/sports")
