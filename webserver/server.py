@@ -41,7 +41,7 @@ app = Flask(__name__, template_folder=tmpl_dir)
 
 # DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
 
-DATABASEURI = "postgresql://yh3416:5933@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
+DATABASEURI = "postgresql://uni:pwd@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
 
 
 #
@@ -155,6 +155,22 @@ def sports_page():
 def athletes_page():
   header = {"Name": "athlete_name"}
   table = to_table("SELECT athlete_name FROM Athletes",header)
+  return render_template("entity.html", title = "Athletes",table=table)
+
+@app.route("/athletes/<athlete_name>")
+def athletes_page_detail(athlete_name):
+  true_name = athlete_name.replace("_"," ")
+  header = {"Name": "athlete_name", "Age": "age","Gender":"gender","Sports":"sports_name","Participate Events":"events_name"}
+  table = to_table(f"""select *
+                  from(select athlete_name,age,case when gender = 0 then 'Female' when gender = 1 then 'Male' end as gender,sports_name, events_name
+                  from Athletes a 
+                  left outer join athlete_participate_event ape 
+                  on a.athlete_id = ape.athlete_id
+                  join events e
+                  on ape.events_id = e.events_id
+                  join Sports s
+                  on s.sports_id = e.sports_id)agg
+                  where athlete_name = '{escape(true_name)}' """,header)
   return render_template("entity.html", title = "Athletes",table=table)
 
 @app.route("/events")
