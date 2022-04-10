@@ -40,7 +40,7 @@ app = Flask(__name__, template_folder=tmpl_dir)
 
 # DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
 
-DATABASEURI = "postgresql://yh3416:5933@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
+DATABASEURI = "postgresql://uni:password@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
 
 
 #
@@ -125,7 +125,7 @@ def to_table(command, header):
       curr.append(result[var])
     data.append(curr)
   table["data"] = data
-  table['header'] = header
+  table["header"] = header
   cursor.close()
   return table
 

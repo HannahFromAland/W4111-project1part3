@@ -5,8 +5,19 @@ Main Page
 {% endblock %}
 
 {% block head %}
-<div>
-    <center><h1>Welcome to the 2022 Beijing Olympics</h1></center>
-    <h2>Please select from the navbar to see the match information</h2>
-</div>
+
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+    
+      <main class="px-3">
+        <h1>Welcome to the 2022 Beijing Olympics Database</h1>
+        <p class="lead">Please select from the navbar to see the match information.</p>
+        <p class="lead">
+          <a href="#" class="btn btn-lg btn-secondary fw-bold border-white bg-white">Learn more</a>
+        </p>
+      </main>
+    
+      <footer class="mt-auto text-white-50">
+        <p>Cover template for <a href="https://getbootstrap.com/" class="text-white">Bootstrap</a>, by <a href="https://twitter.com/mdo" class="text-white">@mdo</a>.</p>
+      </footer>
+    </div>
 {% endblock %}
