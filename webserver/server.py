@@ -331,4 +331,4 @@ if __name__ == "__main__":
     print("running on %s:%d" % (HOST, PORT))
     app.run(host=HOST, port=PORT, debug=debug, threaded=threaded)
     '''
-app.run(host="127.0.0.1", port=8111, debug=True)
+app.run(host="0.0.0.0", port=8111, debug=True)
