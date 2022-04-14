@@ -1,17 +1,13 @@
 
+
 """
 Columbia W4111 Intro to databases
-Example webserver
 
 To run locally
 
     python server.py
 
 Go to http://localhost:8111 in your browser
-
-
-A debugger such as "pdb" may be helpful for debugging.
-Read about it online.
 """
 
 import os
@@ -23,42 +19,10 @@ from flask import Flask, request, render_template, g, redirect, Response
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
+# connect to the database in project1 part2
 
-
-# XXX: The Database URI should be in the format of: 
-#
-#     postgresql://USER:PASSWORD@<IP_OF_POSTGRE_SQL_SERVER>/<DB_NAME>
-#
-# For example, if you had username ewu2493, password foobar, then the following line would be:
-#
-#     DATABASEURI = "postgresql://ewu2493:foobar@<IP_OF_POSTGRE_SQL_SERVER>/postgres"
-#
-# For your convenience, we already set it to the class database
-
-# Use the DB credentials you received by e-mail
-# DB_USER = "YOUR_DB_USERNAME_HERE"
-# DB_PASSWORD = "YOUR_DB_PASSWORD_HERE"
-
-# DB_SERVER = "w4111.cisxo09blonu.us-east-1.rds.amazonaws.com"
-
-DATABASEURI = "postgresql://uni:pwd@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
-
-
-#
-# This line creates a database engine that knows how to connect to the URI above
-#
+DATABASEURI = "postgresql://yh3416:5933@w4111.cisxo09blonu.us-east-1.rds.amazonaws.com/proj1part2"
 engine = create_engine(DATABASEURI)
-
-
-# Here we create a test table and insert some values in it
-engine.execute("""DROP TABLE IF EXISTS test;""")
-engine.execute("""CREATE TABLE IF NOT EXISTS test (
-  id serial,
-  name text
-);""")
-engine.execute("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');""")
-
-
 
 @app.before_request
 def before_request():
@@ -89,32 +53,9 @@ def teardown_request(exception):
 
 @app.route('/')
 def index():
-  """
-  request is a special object that Flask provides to access web request information:
-
-  request.method:   "GET" or "POST"
-  request.form:     if the browser submitted a form, this contains the data in the form
-  request.args:     dictionary of URL arguments e.g., {a:1, b:2} for http://localhost?a=1&b=2
-
-  See its API: http://flask.pocoo.org/docs/0.10/api/#incoming-request-data
-  """
-
-  '''
-  # DEBUG: this is debugging code to see what request looks like
-  print(request.args)
-
-
-  header = ["sports_name"]
-  table = to_table("SELECT * FROM Sports",header)
-  context = dict(data = table)
-
-  #
-  # render_template looks in the templates/ folder for files.
-  # for example, the below file reads template/index.html
-  #
-  return render_template("index.html", **context)
-  '''
   return render_template("home.html")
+
+### Helper Functions ###
 
 def to_table(command, header):
   cursor = g.conn.execute(command)
@@ -130,60 +71,241 @@ def to_table(command, header):
   cursor.close()
   return table
 
+### Entity pages ###
+
 @app.route("/medal_table")
 def medal_page():
     header = {"National Olympic Committees (NOC)":"noc_name","Gold":"gold",
-    "Sliver":"silver", "Bronze":"bronze","Total Medal":"total"}
+    "Silver":"silver", "Bronze":"bronze","Total Medal":"total"}
     table = to_table("SELECT * , gold+silver+bronze as total FROM NOCs ORDER BY gold+silver+bronze DESC",header)
-    return render_template("entity.html", title = "Medal Table",table=table)
-
-@app.route("/medal_table/<sort_criteria>")
-def medal_page_sort(sort_criteria):
-    header = {"National Olympic Committees (NOC)":"noc_name","Gold":"gold",
-    "Sliver":"silver", "Bronze":"bronze"}
-    table = to_table(f"SELECT * FROM NOCs ORDER BY {escape(sort_criteria)} DESC",header)
-    return render_template("entity.html", title = "Medal Table",table=table)
+    return render_template("entity.html", table_name = "NOCs", title = "Medal Table",table=table)
 
 @app.route("/sports")
 def sports_page():
     header = {"Sports Name":"sports_name"}
     table = to_table("SELECT * FROM Sports",header)
-    return render_template("entity.html", title = "Sports",table=table)
-
+    return render_template("entity.html", table_name = "Sports", title = "Sports",table=table)
 
 @app.route("/athletes")
 def athletes_page():
   header = {"Name": "athlete_name"}
   table = to_table("SELECT athlete_name FROM Athletes",header)
-  return render_template("entity.html", title = "Athletes",table=table)
-
-@app.route("/athletes/<athlete_name>")
-def athletes_page_detail(athlete_name):
-  true_name = athlete_name.replace("_"," ")
-  header = {"Name": "athlete_name", "Age": "age","Gender":"gender","Sports":"sports_name","Participate Events":"events_name"}
-  table = to_table(f"""select *
-                  from(select athlete_name,age,case when gender = 0 then 'Female' when gender = 1 then 'Male' end as gender,sports_name, events_name
-                  from Athletes a 
-                  left outer join athlete_participate_event ape 
-                  on a.athlete_id = ape.athlete_id
-                  join events e
-                  on ape.events_id = e.events_id
-                  join Sports s
-                  on s.sports_id = e.sports_id)agg
-                  where athlete_name = '{escape(true_name)}' """,header)
-  return render_template("entity.html", title = "Athletes",table=table)
+  return render_template("entity.html", table_name = "Athletes",title = "Athletes",table=table)
 
 @app.route("/events")
-def teams_page():
+def events_page():
   header = {"Events": "events_name", "Sports": "sports_name", "Date" :"event_date",
   "Start Time": "start_time" ,"End Time":"end_time", "Individual Event" :"indiv"}
   table = to_table("""select events_name, sports_name, event_date, start_time, end_time,
 case when is_individual is False then 'No' else 'Yes' end as indiv
  from Events e join Sports s on e.sports_id = s.sports_id""",header)
-  return render_template("entity.html", title = "Events",table=table)
+  return render_template("entity.html", table_name = "Events", title = "Events",table=table)
+
+@app.route("/teams")
+def teams_page():
+  header = {"Team id":"team_id"}
+  table = to_table("SELECT cast(team_id as text) FROM Teams",header)
+  return render_template("entity.html", table_name = "Teams", title = "Teams",table=table)
 
 
-  '''
+@app.route("/coaches")
+def coaches_page():
+  header = {"Coach Name":"coach_name"}
+  table = to_table("SELECT * FROM Coaches",header)
+  return render_template("entity.html", table_name = "Coaches", title = "Coaches",table=table)
+
+### Relation pages ###
+
+# Helper function for relation
+
+def to_relation(attr, attr_command, rela, relation_command):
+  attributes = {}
+  for at in attr:
+    cursor = g.conn.execute(f"select distinct {at} from " + attr_command)
+    for result in cursor:
+      attributes[at] = result[0]
+  relations = {}
+  for re in rela:
+      cursor = g.conn.execute(f"select distinct {re} from "+ relation_command + f"""and {re} is not null""")
+      lst = []
+      for result in cursor:
+        lst.append(str(result[0]))
+      relations[re] = lst
+  table = {}
+  table["attributes"] = attributes
+  table["relations"] = relations
+  return table
+
+@app.route("/relation/<entity_name>")
+def athletes_page_detail(entity_name): 
+  # NOC*ROC
+  table_name, primary_key = entity_name.split("*")
+  true_name = primary_key.replace("_"," ")
+  if table_name == "Athletes":
+    attr =["athlete_name","age","athlete_gender","noc_name","coach_name"] 
+    rela = ["team_id", "events_name"]
+    attr_command = f"""
+      (select athlete_name,
+      age,
+      case when gender = 0 then 'Female' when gender = 1 then 'Male' end as athlete_gender,
+      noc_name,
+      coach_name
+      from ({escape(table_name)} a 
+      join Participants p
+      on p.athlete_id = a.athlete_id
+      left outer join participant_represents_noc	prn
+      on p.pat_id = prn.pat_id 
+      left outer join NOCs n 
+      on n.noc_id = prn.noc_id 
+      left outer join coach_supervise_participant csp
+      on p.pat_id = csp.pat_id 
+      left outer join (select coach_id, coach_name from coaches) c
+      on csp.coach_id = c.coach_id)agg) t
+      where {attr[0]} = '{escape(true_name)}' """
+    rela_command = f"""
+      {escape(table_name)} a 
+      left outer join 
+      athlete_form_team	aft
+      on a.athlete_id = aft.athlete_id
+      left outer join athlete_participate_event ape
+      on a.athlete_id = ape.athlete_id
+      left outer join events e
+      on ape.events_id = e.events_id
+      where {attr[0]} = '{escape(true_name)}' """
+    table = to_relation(attr,attr_command, rela,rela_command)
+  elif table_name == "NOCs":
+    attr = ["noc_name","gold","silver","bronze"]
+    rela = ["athlete_name","sports_name"]
+    command = f"""(select noc_name, gold,silver,bronze,sports_name,athlete_name
+                from participant_represents_noc prn
+                left outer join nocs n
+                on prn.noc_id = n.noc_id
+                left outer join
+                participant_register_sports prs
+                on prn.pat_id = prs.pat_id
+                left outer join sports s
+                on prs.sports_id = s.sports_id
+                left outer join participants p
+                on prn.pat_id = p.pat_id
+                left outer join athletes a
+                on p.athlete_id = a.athlete_id)agg
+                where {attr[0]} = '{true_name.replace("'","''")}'"""
+    table = to_relation(attr,command,rela, command)
+  elif table_name == "Sports":
+    attr = ["sports_name"]
+    attr_command = f""" Sports where {attr[0]} = '{true_name.replace("'","''")}' """
+    rela = ["events_name","athlete_name","team_id"]
+    rela_command = f""" (select events_name, athlete_name,aft.team_id,sports_name
+                    from events e
+                    left outer join sports s
+                    on e.sports_id = s.sports_id
+                    left outer join
+                    participant_register_sports prs
+                    on s.sports_id = prs.sports_id
+                    left outer join participants p
+                    on prs.pat_id = p.pat_id
+                    left outer join athletes a
+                    on p.athlete_id = a.athlete_id
+                    left outer join teams t
+                    on p.team_id = t.team_id
+                    left outer join athlete_form_team aft
+                    on a.athlete_id = aft.athlete_id)agg
+                    where {attr[0]} = '{true_name.replace("'","''")}'"""
+    table = to_relation(attr,attr_command, rela,rela_command)
+  elif table_name == "Events":
+    attr =["events_name","sports_name","event_date","start_time","end_time","event_type"] 
+    rela = ["athlete_name","team_id"]
+    attr_command = f"""(select sports_name,events_name, event_date, start_time, end_time,
+       case when is_individual = True then 'individual event' else 'team event' end as event_type
+        from Events e
+        join Sports s
+        on e.sports_id = s.sports_id) agg
+        where {attr[0]} = '{true_name.replace("'","''")}' """
+    rela_command = f"""(select events_name,athlete_name, team_id
+        from events e
+        left outer join athlete_participate_event ape
+        on e.events_id = ape.events_id
+        left outer join team_participate_event tpe
+        on e.events_id = tpe.events_id
+        left outer join Athletes a
+        on ape.athlete_id = a.athlete_id)agg 
+        where {attr[0]} = '{true_name.replace("'","''")}' """
+    table = to_relation(attr,attr_command, rela,rela_command)
+  elif table_name == "Teams":
+    attr =["team_id","maximum_participants", "sports_name"]
+    attr_command = f"""(select t.team_id, max_num as maximum_participants, sports_name
+        from teams t
+        left outer join athlete_form_team aft
+        on t.team_id = aft.team_id 
+        left outer join team_participate_event tpe
+        on t.team_id = tpe.team_id
+        left outer join (select events_id, sports_id from events) e
+        on tpe.events_id = e.events_id 
+        left outer join Sports s
+        on e.sports_id = s.sports_id)agg
+        where {attr[0]} = '{true_name}'"""
+    rela = ["athlete_name","events_name"]
+    rela_command = f"""(select t.team_id, athlete_name, events_name
+        from athlete_form_team aft 
+        left outer join teams t
+        on aft.team_id = t.team_id
+        left outer join Athletes a
+        on aft.athlete_id = a.athlete_id
+        left outer join team_participate_event tpe
+        on t.team_id =tpe.team_id 
+        left outer join (select events_name, events_id from events) e
+        on tpe.events_id = e.events_id)agg
+        where {attr[0]} = '{true_name}'"""
+    table = to_relation(attr,attr_command,rela,rela_command)
+  elif table_name == "Coaches":
+    attr = ["coach_name","gender","age","noc_name"]
+    attr_command = f"""(select coach_name, 
+                  case when gender = 0 then 'Female' when gender = 1 then 'Male' end as gender,
+                  age,
+                  noc_name,
+                  sports_name
+                  from coaches c
+                  left outer join coach_supervise_participant csp
+                  on c.coach_id = csp.coach_id
+                  left outer join participant_represents_noc prn 
+                  on csp.pat_id = prn.pat_id
+                  left outer join NOCs n
+                  on n.noc_id = prn.noc_id
+                  left outer join participant_register_sports prs
+                  on prn.pat_id = prs.pat_id
+                  left outer join sports s
+                  on prs.sports_id = s.sports_id)agg
+                  where {attr[0]} = '{true_name}'"""
+    rela = ["athlete_name","team_id"]
+    rela_command = f"""(select coach_name, aft.team_id, a.athlete_name
+                        from coaches c
+                        left outer join coach_supervise_participant csp
+                        on c.coach_id = csp.coach_id
+                        left outer join participants p
+                        on p.pat_id = csp.pat_id
+                        left outer join athlete_form_team aft
+                        on p.athlete_id = aft.athlete_id
+                        left outer join athletes a 
+                        on p.athlete_id = a.athlete_id)agg
+                        where {attr[0]} = '{true_name}'"""
+    table = to_relation(attr,attr_command,rela,rela_command)
+  else:
+    raise ValueError()
+    
+  return render_template("relation.html", title = true_name,table=table)
+
+### Extra functionality pages ###
+
+@app.route("/medal_table/<sort_criteria>")
+def medal_page_sort(sort_criteria):
+    header = {"National Olympic Committees (NOC)":"noc_name","Gold":"gold",
+    "Silver":"silver", "Bronze":"bronze","Total Medal":"total"}
+    table = to_table(f"SELECT * , gold+silver+bronze as total FROM NOCs ORDER BY {escape(sort_criteria)} DESC",header)
+    return render_template("entity.html", table_name = "NOCs", title = "Medal Table",table=table)
+
+
+
+'''
 if __name__ == "__main__":
 
   import click  
