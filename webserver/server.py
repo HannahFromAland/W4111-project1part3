@@ -314,4 +314,4 @@ def medal_page_sort(sort_criteria):
     return render_template("entity.html", table_name = "NOCs", title = "Medal Table",table=table)
 
 if __name__ == "__main__":
-  app.run(host="0.0.0.0", port=8111, debug=True)
+  app.run(host="0.0.0.0", port=8111, debug=False)
